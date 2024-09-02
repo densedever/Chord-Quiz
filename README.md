@@ -5,11 +5,11 @@ I found no good free application like this anywhere that didn't make you sign up
 
 This is not even in pre-alpha yet, as the full structure isn't implemented. This is the barest of bare bones.
 
-Requirements/Wants:
--- triad quiz, major/minor/dim
--- 4-note chords, 5-note, 6+note
--- score system for quiz
--- code for checking answers (multiple choice)
--- record of win/loss? statistics over time?
+_Requirements/Wants:_
+- triad quiz, major/minor/dim
+- 4-note chords, 5-note, 6+note
+- score system for quiz
+- code for checking answers (multiple choice)
+- record of win/loss? statistics over time?
 
 
