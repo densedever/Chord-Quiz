@@ -5,11 +5,13 @@ I found no good free application like this anywhere that didn't make you sign up
 
 This is not even in pre-alpha yet, as the full structure isn't implemented. This is the barest of bare bones.
 
-_Requirements/Wants:_
+_Features/Wants:_
 - triad quiz, major/minor/dim
 - 4-note chords, 5-note, 6+note
 - score system for quiz
 - code for checking answers (multiple choice)
 - record of win/loss? statistics over time?
 
-
+_Requires:_
+- Python 3.11.4
+- PyGame 2.5.1
