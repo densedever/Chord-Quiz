@@ -30,6 +30,7 @@ pygame.mixer.music.set_volume(0.2) # don't blow your speakers out
 SCREEN_WIDTH  = 800
 SCREEN_HEIGHT = 600
 WHITE         = (255, 255, 255)
+BLACK         = (0, 0, 0)
 NOTE_DURATION = 1000 # 2 second default play time
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -41,6 +42,8 @@ pygame.display.set_caption("Chord Quiz")
 TOPLVL     = 1 # main menu
 PRACTICE   = 2
 QUIZ       = 3
+CORRECT    = 4 # if you got an answer correct on the quiz
+WRONG      = 5 # if you got an incorrect answer
 navigation = TOPLVL # which screen you're on
 
 
@@ -68,7 +71,7 @@ class Button():
     def draw(self):
         pygame.draw.rect(screen, 'light grey', self.button, 0, 5)
         pygame.draw.rect(screen, 'dark grey', self.button, 5, 5)
-        text = font.render(self.text, True, 'black')
+        text = font.render(self.text, True, BLACK)
         screen.blit(text, (self.pos[0] + 15, self.pos[1] + 7))
         
     def check_clicked(self):
@@ -77,6 +80,10 @@ class Button():
 
 ### tools for building chords
 
+# these two dicts should be combined into one.
+# maybe with key/values like "maj": ([4, 3], Button(...))
+# I don't want to mess with these right now
+# until quiz functionality is finished
 CHORD_COLORS = {
     "maj":  [4, 3],
     "min":  [3, 4],
@@ -90,6 +97,21 @@ CHORD_COLORS = {
     "dom7": [4, 3, 3],
     "maj9": [4, 3, 4, 3],
     "min9": [3, 4, 3, 4],
+}
+
+CHORD_BUTTONS = {
+    "maj":  Button("Major",        ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*0)),
+    "min":  Button("Minor",        ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*0)),
+    "dim":  Button("Diminished",   ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*0)),
+    "aug":  Button("Augmented",    ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*1)),
+    "sus2": Button("Suspended 2",  ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*1)),
+    "sus4": Button("Suspended 4",  ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*1)),
+    "maj7": Button("Major 7",      ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*2)),
+    "min7": Button("Minor 7",      ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*2)),
+    "dim7": Button("Diminished 7", ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*2)),
+    "dom7": Button("Dominant 7",   ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*3)),
+    "maj9": Button("Major 9",      ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*3)),
+    "min9": Button("Minor 9",      ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*3))
 }
 
 class Chord():
@@ -118,35 +140,40 @@ class Chord():
         for n in self.notes:
             print(SOUND_FILE_NAMES[n])
 
-
-
-
-
 # buttons for navigation and playing the chords
-practice = Button("Practice", (SCREEN_WIDTH/2, SCREEN_HEIGHT/2 - SCREEN_HEIGHT/6))
-
-
-
-CHORD_BUTTONS = {
-    "maj":  Button("Major",        ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*0)),
-    "min":  Button("Minor",        ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*0)),
-    "dim":  Button("Diminished",   ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*0)),
-    "aug":  Button("Augmented",    ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*1)),
-    "sus2": Button("Suspended 2",  ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*1)),
-    "sus4": Button("Suspended 4",  ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*1)),
-    "maj7": Button("Major 7",      ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*2)),
-    "min7": Button("Minor 7",      ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*2)),
-    "dim7": Button("Diminished 7", ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*2)),
-    "dom7": Button("Dominant 7",   ((SCREEN_WIDTH/3)*0, (SCREEN_HEIGHT/4)*3)),
-    "maj9": Button("Major 9",      ((SCREEN_WIDTH/3)*1, (SCREEN_HEIGHT/4)*3)),
-    "min9": Button("Minor 9",      ((SCREEN_WIDTH/3)*2, (SCREEN_HEIGHT/4)*3))
-}
-
-quiz = Button("Quiz", (SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + SCREEN_HEIGHT/6))
-play = Button("Play", (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+left_pad = 150
+top_pad  = 20
+practice = Button("Practice", (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2 - SCREEN_HEIGHT/6))
+quiz     = Button("Quiz",     (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2 + SCREEN_HEIGHT/6))
+play     = Button("Play",     (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2))
+back     = Button("Back",     (SCREEN_WIDTH/2 - left_pad, (SCREEN_HEIGHT/12)*11 - top_pad))
 
 # setting a comfortable hearing range for the chords
 random_note_range = random.randint(20, 60)
+
+# setting a random chord for the quiz section
+random_color = random.choice(list(CHORD_COLORS.values()))
+
+"""
+right_answer_index = 0
+for v in CHORD_COLORS.items():
+    if v == random_color:
+        right_answer_index = 
+    right_answer_index += 1
+"""
+
+# the chord to play on the quiz
+quiz_chord = Chord(random_note_range, random_color)
+
+# "option_name" : [button, isCorrectAnswer]
+QUIZ_OPTIONS = {
+    "option1" : [Button("1", ((SCREEN_WIDTH/4)*0, (SCREEN_HEIGHT/4)*3)), False],
+    "option2" : [Button("2", ((SCREEN_WIDTH/4)*1, (SCREEN_HEIGHT/4)*3)), False],
+    "option3" : [Button("3", ((SCREEN_WIDTH/4)*2, (SCREEN_HEIGHT/4)*3)), False],
+    "option4" : [Button("4", ((SCREEN_WIDTH/4)*3, (SCREEN_HEIGHT/4)*3)), False]
+}
+# tried to make one correct answer in here, got error
+#random.choice(list(QUIZ_OPTIONS.items()))[1] = True
 
 ### main
 running = True
@@ -164,6 +191,9 @@ while running:
     if navigation == PRACTICE:
         for v in CHORD_BUTTONS.values():
             v.draw()
+        back.draw()
+        if back.check_clicked():
+            navigation = TOPLVL
         for k, v in CHORD_BUTTONS.items():
             if v.check_clicked():
                 for k2, v2 in CHORD_COLORS.items():
@@ -171,7 +201,45 @@ while running:
                         ch = Chord(random_note_range, v2)
                         ch.play()
                         ch.debug()
-
+    
+    if navigation == QUIZ:
+        back.draw()
+        if back.check_clicked():
+            navigation = TOPLVL
+        
+        # font.render which chord is this?
+        question = font.render("Which chord is this?", True, BLACK)
+        screen.blit(question, (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2 - top_pad*2))
+        
+        # play button draw()
+        play.draw()
+        if play.check_clicked():
+            quiz_chord.play()
+        
+        # list of 4 options draw()
+        for k, v in QUIZ_OPTIONS.items():
+            v[0].draw()
+            if v[0].check_clicked():
+                # search for right answer
+                if v[1]:
+                    navigation = CORRECT
+                else:
+                    navigation = WRONG
+    
+    if navigation == CORRECT:
+        congrats = font.render("That's right!", True, BLACK)
+        screen.blit(congrats, (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2 + top_pad*2))
+        back.draw()
+        if back.check_clicked():
+            navigation = QUIZ
+    
+    if navigation == WRONG:
+        incorrect = font.render("That's not it!", True, BLACK)
+        screen.blit(incorrect, (SCREEN_WIDTH/2 - left_pad, SCREEN_HEIGHT/2 + top_pad*2))
+        back.draw()
+        if back.check_clicked():
+            navigation = QUIZ
+    
     # all events here
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
